@@ -144,7 +144,7 @@ public class GameController {
         return response;
     }
 
-    @RequestMapping(value={"/conflictreset/{playerId}"})
+/*    @RequestMapping(value={"/conflictreset/{playerId}"})
     public ResponseEntity<Integer> conflictReset(@PathVariable(value="playerId") int playerId) {
         Player player = this.game.getPlayer(playerId);
         if (player == null) {
@@ -153,14 +153,14 @@ public class GameController {
         int resetNum = this.game.conflictReset(player);
         ResponseEntity response = new ResponseEntity(resetNum, HttpStatus.OK);
         return response;
-    }
+    }*/
 
-    @RequestMapping(value={"/nextRound"})
+    /*@RequestMapping(value={"/nextRound"})
     public ResponseEntity<Integer> nextRound() {
         int round = this.game.nextRound();
         ResponseEntity response = new ResponseEntity(round, HttpStatus.OK);
         return response;
-    }
+    }*/
 
     @RequestMapping(value={"/getgame"})
     public ResponseEntity<Game> getGame() {
@@ -230,7 +230,7 @@ public class GameController {
         return response;
     }
 
-    @PostMapping(value={"/setowncard"})
+    /*@PostMapping(value={"/setowncard"})
     public ResponseEntity<String> setOwnCard(@RequestBody SetCardForm setCardForm) {
         String result = this.game.setOwnCard(setCardForm.getPlayerId(), setCardForm.getOwnCard());
         if ("OK".equals(result)) {
@@ -250,7 +250,7 @@ public class GameController {
         }
         System.out.println("Problem with choice:" + setCardForm);
         return new ResponseEntity(result, HttpStatus.CONFLICT);
-    }
+    }*/
 
     public static void setTestMode(boolean b) {
         testMode = b;

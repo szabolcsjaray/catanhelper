@@ -7,7 +7,10 @@ import com.jeec.game.Player;
 import com.jeec.game.PlayerState;
 import com.jeec.game.log.GameLog;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -21,11 +24,13 @@ public class Game {
     private Map<String, Device> devices = new HashMap<String, Device>();
     private Map<String, String> availableColors = new HashMap<>();
     private GameLog gameLog = null;
+    private List<OrderRange> orderRanges;
 
 	private int round;
-    int tellerOrder = -1;
     private boolean playersLocked;
     private GameField gameField;
+    private int nextInitialBuilderOrder;
+    private int initialBuildRound;
 
     public Game() {
     	Player.resetPlayerIds();
@@ -153,123 +158,7 @@ public class Game {
         ++this.stateVersion;
     }
 
-    public synchronized int nextRound() {
-        if (this.state==GameState.ROUND_ENDED || this.state==GameState.WAITING_FOR_PLAYERS) {
-            this.state = GameState.WAITING_FOR_CHOICES;
-            ++this.tellerOrder;
-            if (this.tellerOrder >= this.players.size()) {
-                this.tellerOrder = 0;
-            }
-            for (String playerName : this.players.keySet()) {
-                Player player = this.players.get(playerName);
-                player.setState(PlayerState.GAME_WAITING_FOR_MY_CARD);
-                player.setMyChoice(-1);
-                player.setMyCard(-1);
-                player.setTeller(player.getPlayerOrder() == this.tellerOrder);
-            }
-            ++this.round;
-            ++this.stateVersion;
-            resetRoundPoints();
-            gameLog.logGameStateChange();
-        }
-        return this.round;
-    }
-
-    public synchronized String setOwnCard(final int playerId, final int myCard) {
-        Player player = this.getPlayer(playerId);
-        if (player==null) {
-            return "Nincs ilyen j\u00e1t\u00e9kos.";
-        }
-        ++this.stateVersion;
-        player.setMyCard(myCard);
-        player.setState(PlayerState.GAME_WAITING_FOR_MY_CHOICE);
-        if (this.checkConflictingMyCards()) {
-            this.state = GameState.CONFLICTING_CHOICES;
-            for (String name : this.players.keySet()) {
-                this.players.get(name).setState(PlayerState.CONFLICT_RESET);
-                this.players.get(name).setMyCard(-1);
-                this.players.get(name).setMyChoice(-1);
-            }
-            return "T\u00f6bben jel\u00f6lt\u00e9tek ugyanazt saj\u00e1tnak, ellen\u0151rizz\u00e9tek le!";
-        }
-        if (player.isTeller()) {
-            player.setState(PlayerState.WAITING_FOR_OTHERS_CHOICE);
-            checkAndSetRoundEnd();
-        }
-        return "OK";
-    }
-
-    public String setChoiceCard(String playerName, int myCard, int myChoice) {
-        if (myCard == myChoice) {
-            return "Nem v\u00e1lasythatod a saj\u00e1todat.";
-        }
-        if (!this.players.containsKey(playerName)) {
-            return "Nincs ilyen j\u00e1t\u00e9kos.";
-        }
-        Player player = this.players.get(playerName);
-        if (player.getMyCard()==-1) {
-            return "Először a saját kártyát kell bejelölni.";
-        }
-        if (player.getState()==PlayerState.GAME_WAITING_FOR_MY_CHOICE) {
-            ++this.stateVersion;
-            player.choose(myCard, myChoice);
-            this.checkAndSetRoundEnd();
-        }
-        return "OK";
-    }
-
-    private boolean checkConflictingMyCards() {
-        for (String name : this.players.keySet()) {
-            Player player = this.players.get(name);
-            if (player.getState() != PlayerState.WAITING_FOR_OTHERS_CHOICE &&
-                    player.getState() != PlayerState.GAME_WAITING_FOR_MY_CHOICE) continue;
-            for (String otherName : this.players.keySet()) {
-                Player otherPlayer = this.players.get(otherName);
-                if (player == otherPlayer ||
-                    (otherPlayer.getState() != PlayerState.WAITING_FOR_OTHERS_CHOICE &&
-                    otherPlayer.getState() != PlayerState.GAME_WAITING_FOR_MY_CHOICE) ||
-                    player.getMyCard() != otherPlayer.getMyCard())
-                    continue;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void checkAndSetRoundEnd() {
-        Player player;
-        for (String name : this.players.keySet()) {
-            player = this.players.get(name);
-            if (player.getState() != PlayerState.GAME_WAITING_FOR_MY_CHOICE &&
-                player.getState() != PlayerState.GAME_WAITING_FOR_MY_CARD &&
-                player.getState() != PlayerState.CONFLICT_RESET) continue;
-            this.state = GameState.WAITING_FOR_CHOICES;
-            return;
-        }
-        if (this.state==GameState.ROUND_ENDED) {
-            return;
-        }
-        this.state = GameState.ROUND_ENDED;
-        for (String name : this.players.keySet()) {
-            player = this.players.get(name);
-            player.setState(PlayerState.ROUND_ENDED);
-        }
-        this.calculatePoints();
-        this.gameLog.logGameStateChange();
-    }
-
     private void calculatePoints() {
-        this.resetRoundPoints();
-        Player teller = this.findTeller();
-        if (this.checkIfEveryPlayerFoundOut(teller)) {
-            this.everybodyGotTwoPointsExpectTeller(teller);
-            return;
-        }
-        if (this.atLeastSomeoneFoundOut(teller)) {
-            teller.addPoint(3);
-        }
-        this.addPointsForThoseWhoFoundOut(teller);
-        this.addPointsForOtherPlayersGuess(teller);
     }
 
     private void resetRoundPoints() {
@@ -330,14 +219,7 @@ public class Game {
         return true;
     }
 
-    private Player findTeller() {
-        for (String name : this.players.keySet()) {
-            Player player = this.players.get(name);
-            if (player.getPlayerOrder() != this.tellerOrder) continue;
-            return player;
-        }
-        return null;
-    }
+
 
     public void playerUp(Player player) {
         if (!this.playersLocked) {
@@ -387,37 +269,29 @@ public class Game {
     }
 
     public Integer startGame() {
-        this.nextRound();
-        this.state = GameState.WAITING_FOR_CHOICES;
-        Player teller = this.findPlayerByOrder(0);
-        teller.setTeller(true);
-        for (String name : this.players.keySet()) {
-            Player player = this.players.get(name);
-            player.setState(PlayerState.GAME_WAITING_FOR_MY_CARD);
-        }
+        switchToOrderRollings();
         gameLog.logGameStateChange();
         ++this.stateVersion;
         return this.players.size();
     }
 
-    public int conflictReset(Player player) {
-        Player pl;
-        int resetCount = 0;
-        player.setState(PlayerState.CONFLICT_RESET);
+    private void switchToOrderRollings() {
+        this.state = GameState.ORDER_ROLLINGS;
+        boolean first = true;
         for (String name : this.players.keySet()) {
-            pl = this.players.get(name);
-            if (pl.getState() != PlayerState.CONFLICT_RESET) continue;
-            ++resetCount;
-        }
-        if (resetCount == this.players.size()) {
-            for (String name : this.players.keySet()) {
-                pl = this.players.get(name);
-                pl.setState(PlayerState.GAME_WAITING_FOR_MY_CARD);
+            Player player = this.players.get(name);
+            if (first) {
+                player.setState(PlayerState.ROLLING_ORDER);
+                first = false;
+            } else {
+                player.setState(PlayerState.WAITING_FOR_OTHERS_ROLL_ORDER);
             }
-            this.setState(GameState.WAITING_FOR_CHOICES);
-            ++this.stateVersion;
         }
-        return resetCount;
+
+        orderRanges = new ArrayList<>();
+        OrderRange fullRange = new OrderRange(1, players.size());
+        players.values().forEach(player -> fullRange.addPlayerId(player.getPlayerId()));
+        orderRanges.add(fullRange);
     }
 
     public GameLog getGameLog() {
@@ -439,6 +313,98 @@ public class Game {
             gameField.generateGameField();
         }
         return this.gameField;
+    }
+
+    public void orderDiceRolled(int playerId, int roll) {
+        getPlayer(playerId).orderDiceRolled(roll);
+    }
+
+    public void orderDiceRollVerified() {
+        Player next = null;
+        boolean roll_fight = false;
+        for(Player player:players.values()) {
+            if (player.getState()==PlayerState.WAITING_FOR_ORDER_ROLL_VERIFICATION) {
+                player.orderDiceRollVerified();
+            } else if (player.getState()==PlayerState.WAITING_FOR_ORDER_ROLL_FIGHT_VERIFICATION) {
+                player.orderDiceRollVerified();
+                roll_fight = true;
+            } else if (next==null &&
+                    (player.getState()==PlayerState.WAITING_FOR_OTHERS_ROLL_ORDER ||
+                     player.getState()==PlayerState.WAITING_FOR_OTHERS_ROLL_ORDER_FIGHT)) {
+                next = player;
+            }
+        }
+        if (next==null) {
+            checkAndSetinitialOrder();
+            if (orderRanges.size()>0) {
+                return;
+            }
+            switchToInitialBuilding();
+        } else {
+            if (roll_fight) {
+                next.setState(PlayerState.ROLLING_ORDER_FIGHT);
+            } else {
+                next.setState(PlayerState.ROLLING_ORDER);
+            }
+        }
+    }
+
+    private void switchToInitialBuilding() {
+        this.state = GameState.INITIAL_BUILDING;
+        for(Player player:players.values()) {
+            player.setState(PlayerState.WAITING_FOR_OTHER_INITIAL_BUILD);
+        }
+        nextInitialBuilderOrder = 1;
+        initialBuildRound = 1;
+        Player firstBuilder = findNextInitialBuilder();
+        firstBuilder.setState(PlayerState.INITIAL_BUILD);
+    }
+
+    private void goThroughRange(final OrderRange orderRange, List<OrderRange> newOrderRanges) {
+        int order = orderRange.getFrom();
+        for(int roll=12;roll>0;roll--) {
+            final int innerRoll = roll;
+            List<Player> playersForRoll = new ArrayList<>();
+            players.values().stream().
+                filter(player -> (player.getInitialOrder()==0 && player.getLastRoll()==innerRoll)).
+                forEach(rollPlayer -> playersForRoll.add(rollPlayer));
+            if (playersForRoll.size()==1) {
+                playersForRoll.get(0).setInitialOrder(order);
+                order++;
+            } else if (playersForRoll.size()>1) {
+                OrderRange newRange = new OrderRange(order, order+playersForRoll.size()-1);
+                playersForRoll.forEach(player -> {
+                    newRange.addPlayerId(player.getPlayerId());
+                    player.setState(PlayerState.WAITING_FOR_OTHERS_ROLL_ORDER_FIGHT);
+                });
+                newOrderRanges.add(newRange);
+                order = order+playersForRoll.size();
+            }
+        }
+    }
+
+    private void checkAndSetinitialOrder() {
+        List<OrderRange> newOrderRanges = new ArrayList<>();
+        orderRanges.forEach(orderRange -> goThroughRange(orderRange, newOrderRanges));
+        orderRanges = newOrderRanges;
+        if (orderRanges.size()>0) {
+            getPlayer(orderRanges.get(0).playerIds.get(0)).setState(PlayerState.ROLLING_ORDER_FIGHT);
+        }
+    }
+
+    private Player findNextInitialBuilder() {
+        return players.values().stream().
+                filter(player -> player.getInitialOrder()==nextInitialBuilderOrder).
+                findAny().
+                orElse(null);
+    }
+
+    public void orderDiceRollWrong() {
+        for(Player player:players.values()) {
+            if (player.getState()==PlayerState.WAITING_FOR_ORDER_ROLL_VERIFICATION) {
+                player.orderDiceRollWrong();
+            }
+        }
     }
 
 }

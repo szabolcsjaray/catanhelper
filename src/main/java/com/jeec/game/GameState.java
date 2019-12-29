@@ -5,9 +5,9 @@ package com.jeec.game;
 
 public enum GameState {
     WAITING_FOR_PLAYERS,
-    WAITING_FOR_CHOICES,
-    ROUND_ENDED,
+    ORDER_ROLLINGS,
+    INITIAL_BUILDING,
+    ONGOING_GAME,
     GAME_ENDED,
-    CONFLICTING_CHOICES;
-    
+
 }

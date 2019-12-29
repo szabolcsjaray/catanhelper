@@ -42,7 +42,7 @@ public class TestGame {
     public void testAddSamePlayerName() {
         this.game.addDevice(DEV_HASH);
         String res = this.game.addPlayer(DEV_HASH, PLAYER1, ColorCode.BLUE.name());
-        res = this.game.addPlayer(DEV_HASH, PLAYER1, ColorCode.GREEN.name());
+        res = this.game.addPlayer(DEV_HASH, PLAYER1, ColorCode.ORANGE.name());
         Assert.assertNotEquals("OK", res);
 
     }
@@ -66,7 +66,7 @@ public class TestGame {
     @Test
     public void testAddPlayerNameWrongDevice() {
         this.game.addDevice(DEV_HASH);
-        String res = this.game.addPlayer("WRONGHASH", PLAYER1, ColorCode.GREEN.name());
+        String res = this.game.addPlayer("WRONGHASH", PLAYER1, ColorCode.ORANGE.name());
         Assert.assertNotEquals("OK", res);
     }
 
@@ -96,7 +96,7 @@ public class TestGame {
     	this.game = new Game();
         this.game.addDevice(DEV_HASH);
         String res = this.game.addPlayer(DEV_HASH, PLAYER1, ColorCode.BLUE.name());
-        res = this.game.addPlayer(DEV_HASH, PLAYER2, ColorCode.GREEN.name());
+        res = this.game.addPlayer(DEV_HASH, PLAYER2, ColorCode.RED.name());
         res = this.game.addPlayer(DEV_HASH, PLAYER3, ColorCode.ORANGE.name());
         player1Id = this.game.getPlayers().get(PLAYER1).getPlayerId();
         player2Id = this.game.getPlayers().get(PLAYER2).getPlayerId();
@@ -135,153 +135,98 @@ public class TestGame {
     @Test
     public void testGameStarted() {
         this.initPlayers();
-        this.game.nextRound();
-        Assert.assertEquals(GameState.WAITING_FOR_CHOICES, this.game.getState());
-        Assert.assertEquals(PlayerState.GAME_WAITING_FOR_MY_CARD, this.game.getPlayer(player1Id).getState());
-        Assert.assertEquals(PlayerState.GAME_WAITING_FOR_MY_CARD, this.game.getPlayer(player2Id).getState());
-        Assert.assertEquals(PlayerState.GAME_WAITING_FOR_MY_CARD, this.game.getPlayer(player3Id).getState());
-        Assert.assertEquals(true, this.game.getPlayer(player1Id).isTeller());
+        this.game.startGame();
+        Assert.assertEquals(GameState.ORDER_ROLLINGS, this.game.getState());
+        Assert.assertEquals(PlayerState.ROLLING_ORDER, this.game.getPlayer(player1Id).getState());
+        Assert.assertEquals(PlayerState.WAITING_FOR_OTHERS_ROLL_ORDER, this.game.getPlayer(player2Id).getState());
+        Assert.assertEquals(PlayerState.WAITING_FOR_OTHERS_ROLL_ORDER, this.game.getPlayer(player3Id).getState());
+        //Assert.assertEquals(true, this.game.getPlayer(player1Id).isTeller());
     }
 
     @Test
-    public void testGamePlayerSetOwn() {
+    public void testFirstOrderRoll() {
         this.initPlayers();
-        this.game.nextRound();
-        this.game.setOwnCard(player2Id, 1);
-        Assert.assertEquals(GameState.WAITING_FOR_CHOICES, this.game.getState());
-        Assert.assertEquals(PlayerState.GAME_WAITING_FOR_MY_CARD, this.game.getPlayer(player1Id).getState());
-        Assert.assertEquals(PlayerState.GAME_WAITING_FOR_MY_CHOICE, this.game.getPlayer(player2Id).getState());
-        Assert.assertEquals(PlayerState.GAME_WAITING_FOR_MY_CARD, this.game.getPlayer(player3Id).getState());
-    }
-
-
-    @Test
-    public void testGamePlayerChoose() {
-        this.initPlayers();
-        this.game.nextRound();
-        this.game.setOwnCard(player2Id, 1);
-        this.game.setChoiceCard(PLAYER2, 1, 2);
-        Assert.assertEquals(GameState.WAITING_FOR_CHOICES, this.game.getState());
-        Assert.assertEquals(PlayerState.GAME_WAITING_FOR_MY_CARD, this.game.getPlayer(player1Id).getState());
-        Assert.assertEquals(PlayerState.WAITING_FOR_OTHERS_CHOICE, this.game.getPlayer(player2Id).getState());
-        Assert.assertEquals(PlayerState.GAME_WAITING_FOR_MY_CARD, this.game.getPlayer(player3Id).getState());
+        this.game.startGame();
+        this.game.orderDiceRolled(player1Id, 9 );
+        Assert.assertEquals(9, this.game.getPlayer(player1Id).getLastRoll());
+        Assert.assertEquals(PlayerState.WAITING_FOR_ORDER_ROLL_VERIFICATION, this.game.getPlayer(player1Id).getState());
     }
 
     @Test
-    public void testGamePlayerChooseOwn() {
+    public void testFirstOrderRollVerifed() {
         this.initPlayers();
-        this.game.nextRound();
-        this.game.setOwnCard(player2Id, 1);
-        String res = this.game.setChoiceCard(PLAYER2, 1, 1);
-        Assert.assertNotEquals("OK", res);
-        Assert.assertEquals(GameState.WAITING_FOR_CHOICES, this.game.getState());
-        Assert.assertEquals(PlayerState.GAME_WAITING_FOR_MY_CARD, this.game.getPlayer(player1Id).getState());
-        Assert.assertEquals(PlayerState.GAME_WAITING_FOR_MY_CHOICE, this.game.getPlayer(player2Id).getState());
-        Assert.assertEquals(PlayerState.GAME_WAITING_FOR_MY_CARD, this.game.getPlayer(player3Id).getState());
+        this.game.startGame();
+        this.game.orderDiceRolled(player1Id, 9 );
+        this.game.orderDiceRollVerified();
+        Assert.assertEquals(PlayerState.ORDER_ROLLED, this.game.getPlayer(player1Id).getState());
+
     }
 
     @Test
-    public void testGamePlayerAndTellerChoose() {
+    public void testFirstOrderRollWrong() {
         this.initPlayers();
-        this.game.nextRound();
-        this.game.setOwnCard(player2Id, 1);
-        this.game.setChoiceCard(PLAYER2, 1, 2);
-        String res = this.game.setOwnCard(player1Id, 0);
-        Assert.assertEquals("OK", res);
-        Assert.assertEquals(GameState.WAITING_FOR_CHOICES, this.game.getState());
-        Assert.assertEquals(PlayerState.WAITING_FOR_OTHERS_CHOICE, this.game.getPlayer(player1Id).getState());
-        Assert.assertEquals(PlayerState.WAITING_FOR_OTHERS_CHOICE, this.game.getPlayer(player2Id).getState());
-        Assert.assertEquals(PlayerState.GAME_WAITING_FOR_MY_CARD, this.game.getPlayer(player3Id).getState());
+        this.game.startGame();
+        this.game.orderDiceRolled(player1Id, 9 );
+        this.game.orderDiceRollWrong();
+        Assert.assertEquals(PlayerState.ROLLING_ORDER_AGAIN, this.game.getPlayer(player1Id).getState());
+
     }
 
     @Test
-    public void testGameConflictingChoice() {
+    public void testEveryOneRolledOrder() {
         this.initPlayers();
-        this.game.nextRound();
-        this.game.setOwnCard(player2Id, 1);
-        this.game.setChoiceCard(PLAYER2, 1, 2);
-        String res = this.game.setOwnCard(player1Id, 1);
-        Assert.assertNotEquals("OK", res);
-        Assert.assertEquals(GameState.CONFLICTING_CHOICES, this.game.getState());
-        Assert.assertEquals(PlayerState.CONFLICT_RESET, this.game.getPlayer(player1Id).getState());
-        Assert.assertEquals(PlayerState.CONFLICT_RESET, this.game.getPlayer(player2Id).getState());
-        Assert.assertEquals(PlayerState.CONFLICT_RESET, this.game.getPlayer(player3Id).getState());
+        this.game.startGame();
+        this.game.orderDiceRolled(player1Id, 9 );
+        this.game.orderDiceRollVerified();
+        this.game.orderDiceRolled(player2Id, 11 );
+        this.game.orderDiceRollVerified();
+        Assert.assertEquals(PlayerState.ORDER_ROLLED, this.game.getPlayer(player2Id).getState());
+        this.game.orderDiceRolled(player3Id, 10 );
+        this.game.orderDiceRollVerified();
+        Assert.assertEquals(GameState.INITIAL_BUILDING, this.game.getState());
+        Assert.assertEquals(PlayerState.INITIAL_BUILD, this.game.getPlayer(player2Id).getState());
+        Assert.assertEquals(PlayerState.WAITING_FOR_OTHER_INITIAL_BUILD, this.game.getPlayer(player3Id).getState());
+        Assert.assertEquals(PlayerState.WAITING_FOR_OTHER_INITIAL_BUILD, this.game.getPlayer(player1Id).getState());
+        Assert.assertEquals(1, this.game.getPlayer(player2Id).getInitialOrder());
+        Assert.assertEquals(2, this.game.getPlayer(player3Id).getInitialOrder());
+        Assert.assertEquals(3, this.game.getPlayer(player1Id).getInitialOrder());
+
     }
 
     @Test
-    public void testGameConflictingChoiceCorrected() {
+    public void testSameRollOrder() {
         this.initPlayers();
-        this.game.nextRound();
-        this.game.setOwnCard(player2Id, 1);
-        String res = this.game.setChoiceCard(PLAYER2, 1, 2);
-        res = this.game.setOwnCard(player1Id, 1);
-        Assert.assertNotEquals("OK", res);
-        Assert.assertEquals(GameState.CONFLICTING_CHOICES, this.game.getState());
-        res = this.game.setOwnCard(player2Id, 1);
-        Assert.assertEquals("OK", res);
-        Assert.assertEquals(GameState.CONFLICTING_CHOICES, this.game.getState());
-        Assert.assertEquals(PlayerState.CONFLICT_RESET, this.game.getPlayer(player1Id).getState());
-        Assert.assertEquals(PlayerState.GAME_WAITING_FOR_MY_CHOICE, this.game.getPlayer(player2Id).getState());
-        Assert.assertEquals(PlayerState.CONFLICT_RESET, this.game.getPlayer(player3Id).getState());
+        this.game.startGame();
+        this.game.orderDiceRolled(player1Id, 9 );
+        this.game.orderDiceRollVerified();
+        this.game.orderDiceRolled(player2Id, 9 );
+        this.game.orderDiceRollVerified();
+        Assert.assertEquals(PlayerState.ORDER_ROLLED, this.game.getPlayer(player2Id).getState());
+        this.game.orderDiceRolled(player3Id, 10 );
+        this.game.orderDiceRollVerified();
+        Assert.assertEquals(GameState.ORDER_ROLLINGS, this.game.getState());
+        Assert.assertEquals(1, this.game.getPlayer(player3Id).getInitialOrder());
+        Assert.assertEquals(0, this.game.getPlayer(player1Id).getInitialOrder());
+        Assert.assertEquals(0, this.game.getPlayer(player2Id).getInitialOrder());
+
+        //Assert.assertEquals(PlayerState.ORDER_ROLLED, this.game.getPlayer(player3Id).getState());
+        assertPlayerState(PlayerState.ORDER_ROLLED, player3Id);
+        Assert.assertEquals(PlayerState.WAITING_FOR_OTHERS_ROLL_ORDER_FIGHT, this.game.getPlayer(player2Id).getState());
+        Assert.assertEquals(PlayerState.ROLLING_ORDER_FIGHT, this.game.getPlayer(player1Id).getState());
+
+        this.game.orderDiceRolled(player1Id, 4 );
+        assertPlayerState(PlayerState.WAITING_FOR_ORDER_ROLL_FIGHT_VERIFICATION, player1Id);
+        Assert.assertEquals(4,  this.game.getPlayer(player1Id).getLastRoll());
+        this.game.orderDiceRollVerified();
+        assertPlayerState(PlayerState.ORDER_ROLLED, player1Id);
+        this.game.orderDiceRolled(player2Id, 2 );
+        this.game.orderDiceRollVerified();
+
+        Assert.assertEquals(GameState.INITIAL_BUILDING, this.game.getState());
     }
 
-    @Test
-    public void testWholeRound() {
-        this.initPlayers();
-        this.game.nextRound();
-        String res = this.game.setOwnCard(player1Id, 1);
-        res = this.game.setChoiceCard(PLAYER1, 1, -1);
-        res = this.game.setOwnCard(player2Id, 0);
-        res = this.game.setChoiceCard(PLAYER2, 0, 2);
-        res = this.game.setOwnCard(player3Id, 2);
-        res = this.game.setChoiceCard(PLAYER3, 2, 1);
-        Assert.assertEquals("OK", res);
-        Assert.assertEquals(GameState.ROUND_ENDED, this.game.getState());
-        Assert.assertEquals(PlayerState.ROUND_ENDED, this.game.getPlayer(player1Id).getState());
-        Assert.assertEquals(PlayerState.ROUND_ENDED, this.game.getPlayer(player2Id).getState());
-        Assert.assertEquals(PlayerState.ROUND_ENDED, this.game.getPlayer(player3Id).getState());
-        Assert.assertEquals(3L, this.game.getPlayer(player1Id).getPoint());
-        Assert.assertEquals(0L, this.game.getPlayer(player2Id).getPoint());
-        Assert.assertEquals(4L, this.game.getPlayer(player3Id).getPoint());
-    }
+    private void assertPlayerState(PlayerState state, int playerId) {
+        Assert.assertEquals(state, this.game.getPlayer(playerId).getState());
 
-    @Test
-    public void testRoundEveryoneFoundOut() {
-        this.initPlayers();
-        this.game.nextRound();
-        String res = this.game.setOwnCard(player1Id, 1);
-        res = this.game.setChoiceCard(PLAYER1, 1, -1);
-        res = this.game.setOwnCard(player2Id, 0);
-        res = this.game.setChoiceCard(PLAYER2, 0, 1);
-        res = this.game.setOwnCard(player3Id, 2);
-        res = this.game.setChoiceCard(PLAYER3, 2, 1);
-        Assert.assertEquals("OK", res);
-        Assert.assertEquals(GameState.ROUND_ENDED, this.game.getState());
-        Assert.assertEquals(PlayerState.ROUND_ENDED, this.game.getPlayer(player1Id).getState());
-        Assert.assertEquals(PlayerState.ROUND_ENDED, this.game.getPlayer(player2Id).getState());
-        Assert.assertEquals(PlayerState.ROUND_ENDED, this.game.getPlayer(player3Id).getState());
-        Assert.assertEquals(0L, this.game.getPlayer(player1Id).getPoint());
-        Assert.assertEquals(2L, this.game.getPlayer(player2Id).getPoint());
-        Assert.assertEquals(2L, this.game.getPlayer(player3Id).getPoint());
-    }
-
-    @Test
-    public void testRoundNobodyFoundOut() {
-        this.initPlayers();
-        this.game.nextRound();
-        String res = this.game.setOwnCard(player1Id, 1);
-        res = this.game.setChoiceCard(PLAYER1, 1, -1);
-        res = this.game.setOwnCard(player2Id, 0);
-        res = this.game.setChoiceCard(PLAYER2, 0, 2);
-        res = this.game.setOwnCard(player3Id, 2);
-        res = this.game.setChoiceCard(PLAYER3, 2, 0);
-        Assert.assertEquals("OK", res);
-        Assert.assertEquals(GameState.ROUND_ENDED, this.game.getState());
-        Assert.assertEquals(PlayerState.ROUND_ENDED, this.game.getPlayer(player1Id).getState());
-        Assert.assertEquals(PlayerState.ROUND_ENDED, this.game.getPlayer(player2Id).getState());
-        Assert.assertEquals(PlayerState.ROUND_ENDED, this.game.getPlayer(player3Id).getState());
-        Assert.assertEquals(0L, this.game.getPlayer(player1Id).getPoint());
-        Assert.assertEquals(1L, this.game.getPlayer(player2Id).getPoint());
-        Assert.assertEquals(1L, this.game.getPlayer(player3Id).getPoint());
     }
 }

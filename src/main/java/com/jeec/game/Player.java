@@ -16,7 +16,9 @@ public class Player {
     private int myChoice;
     private int playerId;
     private long playerHash;
+    private int lastRoll;
     private static int lastPlayerId = 0;
+    private int initialOrder = 0;
 
     static int getNextPlayerId() {
         return lastPlayerId++;
@@ -122,11 +124,11 @@ public class Player {
         this.roundPoint += point;
     }
 
-    public void choose(int myCard, int myChoice) {
+    /*public void choose(int myCard, int myChoice) {
         this.myCard = myCard;
         this.myChoice = myChoice;
         this.state = PlayerState.WAITING_FOR_OTHERS_CHOICE;
-    }
+    }*/
 
     public void decreasePlayerOrder() {
         --this.playerOrder;
@@ -162,5 +164,38 @@ public class Player {
 
     public boolean isWhiteText() {
         return this.getColor().isWhiteText();
+    }
+
+    public void orderDiceRolled(int roll) {
+        this.setLastRoll(roll);
+        if (state==PlayerState.ROLLING_ORDER_FIGHT) {
+            setState(PlayerState.WAITING_FOR_ORDER_ROLL_FIGHT_VERIFICATION);
+        } else {
+            setState(PlayerState.WAITING_FOR_ORDER_ROLL_VERIFICATION);
+        }
+    }
+
+    public void orderDiceRollVerified() {
+        this.setState(PlayerState.ORDER_ROLLED);
+    }
+
+    public void orderDiceRollWrong() {
+        this.setState(PlayerState.ROLLING_ORDER_AGAIN);
+    }
+
+    public int getLastRoll() {
+        return lastRoll;
+    }
+
+    public void setLastRoll(int lastRoll) {
+        this.lastRoll = lastRoll;
+    }
+
+    public int getInitialOrder() {
+        return initialOrder;
+    }
+
+    public void setInitialOrder(int initialOrder) {
+        this.initialOrder = initialOrder;
     }
 }

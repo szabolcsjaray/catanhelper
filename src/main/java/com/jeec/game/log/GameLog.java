@@ -55,7 +55,7 @@ public class GameLog {
     }
 
     public void logGameStateChange() {
-        if (lastGameState==GameState.WAITING_FOR_PLAYERS &&
+        /*if (lastGameState==GameState.WAITING_FOR_PLAYERS &&
             game.getState()==GameState.WAITING_FOR_CHOICES) {
             initSavedPlayers();
             addNewRound();
@@ -68,7 +68,7 @@ public class GameLog {
         } else if (lastGameState==GameState.ROUND_ENDED &&
                 game.getState()==GameState.WAITING_FOR_CHOICES) {
             addNewRound();
-        }
+        }*/
         lastGameState = game.getState();
     }
 
