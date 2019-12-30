@@ -24,6 +24,7 @@ bootJar {
 
 repositories {
     mavenCentral()
+    maven { url "https://repo.grails.org/grails/core" }
 }
 
 sourceCompatibility = 1.8
@@ -31,6 +32,9 @@ targetCompatibility = 1.8
 
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
+    compile group: 'io.springfox', name: 'springfox-swagger2', version: '2.7.0'
+    compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.7.0'
+    compile('org.springframework.boot:spring-boot-starter-web')
     testCompile("junit:junit")
 }
 

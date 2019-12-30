@@ -12,7 +12,7 @@ curl -i -H "Accept:application/json" \
 curl -i -H "Accept:application/json" \
 -H "Content-Type:application/json" \
 -X POST \
---data '{ "deviceHash":"AA44SS", "playerName": "Dénes", "colorName": "Zöld"}' \
+--data '{ "deviceHash":"AA44SS", "playerName": "Dénes", "colorName": "Piros"}' \
 "http://localhost:8080/addPlayer"
 
 curl -i -H "Accept:application/json" \

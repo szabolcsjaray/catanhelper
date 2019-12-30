@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -66,7 +67,7 @@ public class GameController {
         return ip;
     }
 
-    @RequestMapping(value={"/"})
+    @RequestMapping(value={"/"}, method=RequestMethod.GET)
     public String index() {
         String ip = GameController.getIp();
         StringBuilder page = new StringBuilder("Dixit Helper.<br> \n"+
@@ -80,7 +81,7 @@ public class GameController {
         return page.toString();
     }
 
-    @RequestMapping(value={"/qrimage"})
+    @RequestMapping(value={"/qrimage"}, method=RequestMethod.GET)
     @ResponseBody
     public byte[] createQRImage() {
         String startPage = "http://"+GameController.getIp()+":8080/start.html";
@@ -90,7 +91,7 @@ public class GameController {
         return imageSVG.getBytes();
     }
 
-    @RequestMapping(value={"/connect/{deviceHash}"})
+    @RequestMapping(value={"/connect/{deviceHash}"}, method=RequestMethod.GET)
     public String connectDevice(@PathVariable(value="deviceHash") String deviceHash) {
         String result = this.game.addDevice(deviceHash);
         if ("OK".equals(result)) {
@@ -112,7 +113,7 @@ public class GameController {
         return new ResponseEntity(result, HttpStatus.CONFLICT);
     }
 
-    @RequestMapping(value={"/getPlayer/{playerId}"})
+    @RequestMapping(value={"/getPlayer/{playerId}"}, method=RequestMethod.GET)
     public ResponseEntity<Player> getPlayer(@PathVariable(value="playerId") int playerId) {
         Player player = this.game.getPlayer(playerId);
         if (player == null) {
@@ -122,7 +123,7 @@ public class GameController {
         return response;
     }
 
-    @RequestMapping(value={"/playerUp/{playerId}"})
+    @RequestMapping(value={"/playerUp/{playerId}"}, method=RequestMethod.GET)
     public ResponseEntity<Player> playerUp(@PathVariable(value="playerId") int playerId) {
         Player player = this.game.getPlayer(playerId);
         if (player == null) {
@@ -133,7 +134,7 @@ public class GameController {
         return response;
     }
 
-    @RequestMapping(value={"/playerDown/{playerId}"})
+    @RequestMapping(value={"/playerDown/{playerId}"}, method=RequestMethod.GET)
     public ResponseEntity<Player> playerDown(@PathVariable(value="playerId") int playerId) {
         Player player = this.game.getPlayer(playerId);
         if (player == null) {
@@ -162,7 +163,7 @@ public class GameController {
         return response;
     }*/
 
-    @RequestMapping(value={"/getgame"})
+    @RequestMapping(value={"/getgame"}, method=RequestMethod.GET)
     public ResponseEntity<Game> getGame() {
         /*
         // for debuging:
@@ -178,7 +179,7 @@ public class GameController {
         return response;
     }
 
-    @RequestMapping(value={"/getfield"})
+    @RequestMapping(value={"/getfield"}, method=RequestMethod.GET)
     public ResponseEntity<GameField> getField() {
         /*
         // for debuging:
@@ -194,7 +195,7 @@ public class GameController {
         return response;
     }
 
-    @RequestMapping(value={"/gettiles"})
+    @RequestMapping(value={"/gettiles"}, method=RequestMethod.GET)
     public ResponseEntity<List<GameTileType>> getTiles() {
         /*
         // for debuging:
@@ -210,20 +211,20 @@ public class GameController {
         return response;
     }
 
-    @RequestMapping(value={"/getlog"})
+    @RequestMapping(value={"/getlog"}, method=RequestMethod.GET)
     public ResponseEntity<GameLog> getGameLog() {
         ResponseEntity response = new ResponseEntity(this.game.getGameLog(), HttpStatus.OK);
         return response;
     }
 
-    @RequestMapping(value={"/getgameversion"})
+    @RequestMapping(value={"/getgameversion"}, method=RequestMethod.GET)
     public ResponseEntity<Integer> getGameVersion() {
         Integer res = this.game.getStateVersion();
         ResponseEntity response = new ResponseEntity(res, HttpStatus.OK);
         return response;
     }
 
-    @RequestMapping(value={"/startgame"})
+    @RequestMapping(value={"/startgame"}, method=RequestMethod.GET)
     public ResponseEntity<Integer> startGame() {
         Integer res = this.game.startGame();
         ResponseEntity response = new ResponseEntity(res, HttpStatus.OK);
