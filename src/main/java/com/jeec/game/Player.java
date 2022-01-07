@@ -167,6 +167,10 @@ public class Player {
     }
 
     public void orderDiceRolled(int roll) {
+        if (state!=PlayerState.ROLLING_ORDER && state!=PlayerState.ROLLING_ORDER_FIGHT &&
+                state!=PlayerState.ROLLING_ORDER_AGAIN) {
+            throw new RuntimeException("wrong player rolled the dice:" + getName() + "(playerId:" + getPlayerId() + ". State was:" + getState());
+        }
         this.setLastRoll(roll);
         if (state==PlayerState.ROLLING_ORDER_FIGHT) {
             setState(PlayerState.WAITING_FOR_ORDER_ROLL_FIGHT_VERIFICATION);

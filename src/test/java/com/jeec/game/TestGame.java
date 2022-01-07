@@ -13,9 +13,28 @@ public class TestGame {
     private static final String PLAYER3 = "Jane";
     private static final String PLAYER2 = "Jack";
     private static final String PLAYER1 = "Joe";
+    private static final String PLAYER4 = "Jill";
     private Game game;
     static final String DEV_HASH = "AA";
-    int player1Id, player2Id, player3Id;
+    int player1Id, player2Id, player3Id, player4Id;
+
+
+    private void initPlayers() {
+        this.game = new Game();
+        this.game.addDevice(DEV_HASH);
+        String res = this.game.addPlayer(DEV_HASH, PLAYER1, ColorCode.BLUE.name());
+        res = this.game.addPlayer(DEV_HASH, PLAYER2, ColorCode.RED.name());
+        res = this.game.addPlayer(DEV_HASH, PLAYER3, ColorCode.ORANGE.name());
+        player1Id = this.game.getPlayers().get(PLAYER1).getPlayerId();
+        player2Id = this.game.getPlayers().get(PLAYER2).getPlayerId();
+        player3Id = this.game.getPlayers().get(PLAYER3).getPlayerId();
+
+    }
+
+    private void add4thPlayer() {
+        this.game.addPlayer(DEV_HASH, PLAYER4, ColorCode.WHITE.name());
+        player4Id = this.game.getPlayers().get(PLAYER4).getPlayerId();
+    }
 
     @Before
     public void initTests() {
@@ -90,18 +109,6 @@ public class TestGame {
         String res = this.game.addDevice("AAA33FF");
         res = this.game.addDevice("AAA33FF");
         Assert.assertNotEquals(res, "OK");
-    }
-
-    private void initPlayers() {
-    	this.game = new Game();
-        this.game.addDevice(DEV_HASH);
-        String res = this.game.addPlayer(DEV_HASH, PLAYER1, ColorCode.BLUE.name());
-        res = this.game.addPlayer(DEV_HASH, PLAYER2, ColorCode.RED.name());
-        res = this.game.addPlayer(DEV_HASH, PLAYER3, ColorCode.ORANGE.name());
-        player1Id = this.game.getPlayers().get(PLAYER1).getPlayerId();
-        player2Id = this.game.getPlayers().get(PLAYER2).getPlayerId();
-        player3Id = this.game.getPlayers().get(PLAYER3).getPlayerId();
-
     }
 
     @Test
@@ -223,6 +230,51 @@ public class TestGame {
         this.game.orderDiceRollVerified();
 
         Assert.assertEquals(GameState.INITIAL_BUILDING, this.game.getState());
+        Assert.assertEquals(1, this.game.getPlayer(player3Id).getInitialOrder());
+        Assert.assertEquals(2, this.game.getPlayer(player1Id).getInitialOrder());
+        Assert.assertEquals(3, this.game.getPlayer(player2Id).getInitialOrder());
+    }
+
+    @Test
+    public void testComplicatedSameRollOrder() {
+        this.initPlayers();
+        add4thPlayer();
+
+        this.game.startGame();
+        this.game.orderDiceRolled(player1Id, 9 );
+        this.game.orderDiceRollVerified();
+        this.game.orderDiceRolled(player2Id, 10 );
+        this.game.orderDiceRollVerified();
+        Assert.assertEquals(PlayerState.ORDER_ROLLED, this.game.getPlayer(player2Id).getState());
+        this.game.orderDiceRolled(player4Id, 9 );
+        this.game.orderDiceRollVerified();
+        this.game.orderDiceRolled(player3Id, 10 );
+        this.game.orderDiceRollVerified();
+
+        Assert.assertEquals(GameState.ORDER_ROLLINGS, this.game.getState());
+        Assert.assertEquals(0, this.game.getPlayer(player3Id).getInitialOrder());
+        Assert.assertEquals(0, this.game.getPlayer(player4Id).getInitialOrder());
+        Assert.assertEquals(0, this.game.getPlayer(player1Id).getInitialOrder());
+        Assert.assertEquals(0, this.game.getPlayer(player2Id).getInitialOrder());
+
+        //Assert.assertEquals(PlayerState.ORDER_ROLLED, this.game.getPlayer(player3Id).getState());
+        assertPlayerState(PlayerState.WAITING_FOR_OTHERS_ROLL_ORDER_FIGHT, player3Id);
+        assertPlayerState(PlayerState.WAITING_FOR_OTHERS_ROLL_ORDER_FIGHT, player1Id);
+        assertPlayerState(PlayerState.WAITING_FOR_OTHERS_ROLL_ORDER_FIGHT, player4Id);
+        assertPlayerState(PlayerState.ROLLING_ORDER_FIGHT, player2Id);
+
+        /*this.game.orderDiceRolled(player1Id, 4 );
+        assertPlayerState(PlayerState.WAITING_FOR_ORDER_ROLL_FIGHT_VERIFICATION, player1Id);
+        Assert.assertEquals(4,  this.game.getPlayer(player1Id).getLastRoll());
+        this.game.orderDiceRollVerified();
+        assertPlayerState(PlayerState.ORDER_ROLLED, player1Id);
+        this.game.orderDiceRolled(player2Id, 2 );
+        this.game.orderDiceRollVerified();
+
+        Assert.assertEquals(GameState.INITIAL_BUILDING, this.game.getState());
+        Assert.assertEquals(1, this.game.getPlayer(player3Id).getInitialOrder());
+        Assert.assertEquals(2, this.game.getPlayer(player1Id).getInitialOrder());
+        Assert.assertEquals(3, this.game.getPlayer(player2Id).getInitialOrder());*/
     }
 
     private void assertPlayerState(PlayerState state, int playerId) {
