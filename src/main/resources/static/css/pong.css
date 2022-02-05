@@ -1,6 +1,6 @@
 .player {
 	height : 10%;
-	width: 2%;
+	width: 1%;
 	background-color: white;
 	position: absolute;
 }
@@ -9,6 +9,7 @@ body {
 	background-color: black;
 	margin:0;
 	padding: 0;
+	font-family: Arial;
 }
 
 #cont {
@@ -18,12 +19,12 @@ body {
 }
 
 #p0 {
-	left: 5%;
+	left: 3%;
 	top:20%;
 }
 
 #p1 {
-	left: 95%;
+	right: 3%;
 	top:20%;
 }
 
@@ -34,4 +35,148 @@ body {
 	left: 30%;
 	background-color: white;
 	position: absolute;
+}
+
+#nameDiv {
+    width: 80%;
+    margin: auto;
+    margin-top: 40px;
+    display: flex;
+     justify-content: center;
+}
+
+#head {
+    overflow: hidden;
+    color: white;
+    font-size: 30px;
+    font-weight: bold;
+    white-space: nowrap;
+    margin: auto;
+    position: relative;
+    width: 100%;
+    text-align: center;
+    margin-top: 10px;
+}
+
+
+#name {
+    width: 75%;
+    height: 100px;
+    font-size: 80px;
+    background-color: #647373;
+    border-radius: 40px;
+    padding-left: 20px;
+    text-align: center;
+}
+
+li.gamer {
+    list-style-type: none;
+    background-color: #9b968e;
+    color: black;
+    border-radius: 10px;
+    font-size: 30px;
+    margin: 5px;
+    padding-left: 20px;
+    width: 50%;
+    padding-bottom: 3px;
+    padding-top: 3px;
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+.gamerName {
+    display: inline-block;
+    width: 47%;
+    position: relative;
+}
+
+.gameButton {
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    background-color: #a7cecb;
+    box-shadow: 10px 5px #313546;
+    top: -4px;
+    position: relative;
+}
+
+.gamerButton {
+    display: inline-block;
+    width: 50%;
+    text-align: right;
+    font-size: 30px;
+    font-weight: bold;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+#gamerList {
+    margin-top: 40px;
+}
+
+button#nameOk {
+    font-size: 80px;
+    font-weight: bold;
+    border-radius: 30px;
+    padding-left: 10px;
+    padding-right: 10px;
+    background-color: #abc4cc;
+    box-shadow: 10px 5px #313546;
+    position: relative;
+    top: -4px;
+    margin-left: 20px;
+    color: #263735;
+}
+
+svg {
+    width: 500px;
+    display: block;
+    height: 500px;
+}
+
+button.calledPlayer {
+    background-color: #ddc857;
+}
+
+button.calledMe {
+    background-color: #dd5757;
+}
+
+#leftPlayer {
+    left: 2%;
+    text-align: left;
+}
+
+#rightPlayer {
+    right: 2%;
+    text-align: right;
+}
+
+#score {
+    text-align: center;
+    font-weight: bold;
+    left: 50%;
+    width: 40%;
+    transform: translate(-50%, 0%);
+    color: #d2d246;
+}
+
+.nameDiv {
+    position: absolute;
+    top:2%;
+    color: grey;
+    font-size: 5em;
+}
+
+#centerLine {
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    width: 0.5%;
+    height: 88%;
+    transform: translate(-50%, 0%);
+    background-image: url("../pict/pongcenter.png");
+
 }

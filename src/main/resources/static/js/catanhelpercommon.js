@@ -1,9 +1,23 @@
 /**
  * common used functions for dixithelper client pages start.html and game.html
  */
+var deviceHash;
+var lastVersion = -1;
+var playerData = new Object();
+var errorHappened = false;
+
+
 String.prototype.reverse = function() {
     return this.split("").reverse().join("");
 }
+
+var myAddress=window.location.href;
+var addrPos = myAddress.indexOf(':');
+addrPos = myAddress.indexOf(':', addrPos+1);
+addrPos = myAddress.indexOf('/', addrPos+1);
+myAddress = myAddress.slice(0, addrPos);
+myAddress = myAddress+"/pong";
+//myAddress.reverse().substring(10).reverse();
 
 function setCookie(cname, cvalue, exdays) {
       var d = new Date();
@@ -88,3 +102,25 @@ function hideEl(elId) {
 function showEl(elId, displayMode="block") {
     getEl(elId).style.display = displayMode;
 }
+
+function checkDeviceAndRegisterIfNeeded(gameJson) {
+    deviceHash = getCookie("catanDevice");
+    if (deviceHash=="") {
+        deviceHash = 10000 + Math.round(Math.random(2)*89000);
+        setCookie("catanDevice", ""+deviceHash, 31);
+    }
+    game = JSON.parse(gameJson);
+    var foundDevice = false;
+    Object.keys(game.devices).forEach(function(deviceKey) {
+        if (deviceKey==deviceHash) {
+            foundDevice=true;
+        }
+    });
+    if (!foundDevice) {
+        sendRest("connect/"+deviceHash,storeDeviceHash);
+    }
+}
+
+function doNothing(response) {
+}
+

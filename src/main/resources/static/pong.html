@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <title>Pong</title>
     <script type="text/javascript" src="js/pong.js"></script>
+	<script type="text/javascript" src="js/catanhelpercommon.js"></script>
     <link rel="stylesheet" type="text/css" href="css/pong.css" media="screen" />
 </head>
-<body>
+<body onload="startPongGame();">
+	<div id="centerLine"></div>
+	<div id="leftPlayer" class="nameDiv">LeftName</div>
+	<div id="rightPlayer" class="nameDiv">RightName</div>
+	<div id="score" class="nameDiv">1 : 0</div>
 	<div id="cont">
 		<div id="p0" class="player">&nbsp;</div>
 		<div id="p1" class="player">&nbsp;</div>

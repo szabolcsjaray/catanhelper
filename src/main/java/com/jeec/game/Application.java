@@ -28,7 +28,7 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages={"com.jeec.game", "com.jeec.pong"})
 @EnableSwagger2
 public class Application {
     public static void main(String[] args) {
@@ -38,7 +38,7 @@ public class Application {
     @Bean
     public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
         return args -> {
-            System.out.println("DixitHelper started.");
+            System.out.println("CatanHelper started.");
             String ip = GameController.getIp();
             String url = "http://" + ip + ":8080";
             if (args.length>0 && args[0].equalsIgnoreCase("dixittest")) {
@@ -59,10 +59,11 @@ public class Application {
                     runtime.exec("xdg-open " + url );
                 }
                 catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println("Cannot open browser with page.");
+                    //e.printStackTrace();
                 }
             }
-            System.out.println("Open this page on yuor mobile device to join game:\n http://" + ip + ":8080/start.html");
+            System.out.println("Open this page on your mobile device to join game:\n http://" + ip + ":8080/start.html");
         };
     }
 
